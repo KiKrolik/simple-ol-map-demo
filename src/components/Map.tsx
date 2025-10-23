@@ -111,23 +111,7 @@ const MapComponent: React.FC<MapProps> = ({ children, className = "map" }) => {
       className="map-wrapper"
       style={{ position: "relative", width: "100%", height: "100%" }}
     >
-      {loading && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 1000,
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            padding: "1rem",
-            borderRadius: "4px",
-            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          Inicjalizacja mapy...
-        </div>
-      )}
+      {loading && <div className="map-loading">Inicjalizacja mapy...</div>}
       <div ref={mapRef} className={className} />
 
       {/* Show loading progress for each layer */}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Map from "./components/Map";
+import Sidebar from "./components/Sidebar";
 import {
   OSMLayer,
   VoivodeshipsLayer,
@@ -7,13 +8,7 @@ import {
   MaskLayer,
   ChartsLayer,
 } from "./components/layers";
-
-interface LayerVisibility {
-  osm: boolean;
-  voivodeships: boolean;
-  lines: boolean;
-  charts: boolean;
-}
+import { LayerVisibility, ChartType } from "./types";
 
 function App() {
   const [layerVisibility, setLayerVisibility] = useState<LayerVisibility>({
@@ -23,7 +18,7 @@ function App() {
     charts: true,
   });
 
-  const [chartType, setChartType] = useState<"pie" | "bar">("pie");
+  const [chartType, setChartType] = useState<ChartType>("pie");
 
   const toggleLayer = (layerName: keyof LayerVisibility) => {
     setLayerVisibility((prev) => ({
@@ -34,69 +29,12 @@ function App() {
 
   return (
     <div className="app">
-      <div className="header">
-        <h1>Mapa Polski</h1>
-
-        <div className="layer-controls" style={{ marginTop: "1rem" }}>
-          <h3>Warstwy:</h3>
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            <label>
-              <input
-                type="checkbox"
-                checked={layerVisibility.voivodeships}
-                onChange={() => toggleLayer("voivodeships")}
-              />
-              Województwa
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={layerVisibility.lines}
-                onChange={() => toggleLayer("lines")}
-              />
-              Linie
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={layerVisibility.charts}
-                onChange={() => toggleLayer("charts")}
-              />
-              Wykresy danych
-            </label>
-          </div>
-
-          <div style={{ marginTop: "1rem" }}>
-            <h4>Typ wykresów:</h4>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <label>
-                <input
-                  type="radio"
-                  name="chartType"
-                  value="pie"
-                  checked={chartType === "pie"}
-                  onChange={(e) =>
-                    setChartType(e.target.value as "pie" | "bar")
-                  }
-                />
-                Kołowy
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="chartType"
-                  value="bar"
-                  checked={chartType === "bar"}
-                  onChange={(e) =>
-                    setChartType(e.target.value as "pie" | "bar")
-                  }
-                />
-                Słupkowy
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Sidebar
+        layerVisibility={layerVisibility}
+        chartType={chartType}
+        onToggleLayer={toggleLayer}
+        onChangeChartType={setChartType}
+      />
 
       <div className="map-container">
         <Map>
