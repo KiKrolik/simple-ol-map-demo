@@ -1,6 +1,11 @@
 import { useState } from "react";
 import Map from "./components/Map";
-import { OSMLayer, VoivodeshipsLayer, LinesLayer } from "./components/layers";
+import {
+  OSMLayer,
+  VoivodeshipsLayer,
+  LinesLayer,
+  MaskLayer,
+} from "./components/layers";
 
 interface LayerVisibility {
   osm: boolean;
@@ -55,6 +60,7 @@ function App() {
           <OSMLayer visible={layerVisibility.osm} />
           <VoivodeshipsLayer visible={layerVisibility.voivodeships} />
           <LinesLayer visible={layerVisibility.lines} />
+          <MaskLayer />
         </Map>
       </div>
     </div>

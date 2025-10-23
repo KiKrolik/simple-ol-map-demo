@@ -2,10 +2,10 @@ import { fromLonLat } from "ol/proj";
 
 // Poland bounding box coordinates (more precise)
 export const POLAND_BOUNDS = {
-  minLon: 14.0,
-  minLat: 48.2,
+  minLon: 13.4,
+  minLat: 48.6,
   maxLon: 24.9,
-  maxLat: 55.6,
+  maxLat: 55.2,
 };
 
 // Calculate center of Poland

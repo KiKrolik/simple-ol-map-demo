@@ -46,10 +46,10 @@ src/
 - ✅ **Konfiguracja stylów warstw** przez props
 - ✅ **Optymalizacja wydajności** - WebGL rendering dla warstwy linii
 - ✅ **Batch loading** - ładowanie dużych zbiorów danych w partiach (reusable utility)
+- ✅ **Maska zakrywająca obszary poza Polską** (biały poligon)
 
 ### Planowane
 
-- 🔄 **Maska zakrywająca obszary poza Polską** (biały poligon)
 - 🔄 **Wizualizacje danych z ol-ext** - wykresy na podstawie danych1-4
 
 ## Instalacja i uruchomienie
