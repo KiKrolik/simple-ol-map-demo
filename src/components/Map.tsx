@@ -12,13 +12,24 @@ import {
   POLAND_EXTENT,
   MAP_CONFIG,
 } from "../config/poland";
+import LoadingProgress from "./LoadingProgress";
+import { BatchLoadingState } from "../utils";
 
-// Context to share the map instance with child layer components
+// Context to share the map instance and loading states with child layer components
 interface MapContextType {
   map: Map | null;
+  registerLayerLoading: (
+    layerName: string,
+    loadingState: BatchLoadingState
+  ) => void;
+  unregisterLayerLoading: (layerName: string) => void;
 }
 
-const MapContext = createContext<MapContextType>({ map: null });
+const MapContext = createContext<MapContextType>({
+  map: null,
+  registerLayerLoading: () => {},
+  unregisterLayerLoading: () => {},
+});
 
 export const useMap = () => {
   const context = useContext(MapContext);
@@ -37,6 +48,26 @@ const MapComponent: React.FC<MapProps> = ({ children, className = "map" }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<Map | null>(null);
   const [loading, setLoading] = useState(true);
+  const [layerLoadingStates, setLayerLoadingStates] = useState<
+    Record<string, BatchLoadingState>
+  >({});
+
+  const registerLayerLoading = (
+    layerName: string,
+    loadingState: BatchLoadingState
+  ) => {
+    setLayerLoadingStates((prev) => ({
+      ...prev,
+      [layerName]: loadingState,
+    }));
+  };
+
+  const unregisterLayerLoading = (layerName: string) => {
+    setLayerLoadingStates((prev) => {
+      const { [layerName]: removed, ...rest } = prev;
+      return rest;
+    });
+  };
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -97,7 +128,27 @@ const MapComponent: React.FC<MapProps> = ({ children, className = "map" }) => {
         </div>
       )}
       <div ref={mapRef} className={className} />
-      <MapContext.Provider value={{ map }}>{children}</MapContext.Provider>
+
+      {/* Show loading progress for each layer */}
+      {Object.entries(layerLoadingStates).map(
+        ([layerName, loadingState], index) => (
+          <LoadingProgress
+            key={layerName}
+            loadingState={loadingState}
+            layerName={layerName}
+            style={{
+              top: `${10 + index * 80}px`, // Stack multiple progress indicators
+              right: "10px",
+            }}
+          />
+        )
+      )}
+
+      <MapContext.Provider
+        value={{ map, registerLayerLoading, unregisterLayerLoading }}
+      >
+        {children}
+      </MapContext.Provider>
     </div>
   );
 };

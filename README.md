@@ -9,11 +9,16 @@ src/
 ├── components/          # Komponenty React
 │   ├── Map.tsx         # Główny komponent mapy z kontekstem
 │   ├── MapComponent.tsx # Stary komponent (do usunięcia)
+│   ├── LoadingProgress.tsx # Komponent progress bar dla ładowania
 │   └── layers/         # Komponenty warstw
 │       ├── OSMLayer.tsx           # Warstwa bazowa OSM
 │       ├── VoivodeshipsLayer.tsx  # Warstwa województw
-│       ├── LinesLayer.tsx         # Warstwa linii
+│       ├── LinesLayer.tsx         # Warstwa linii (WebGL + batch loading)
 │       └── index.ts              # Eksport warstw
+├── utils/              # Narzędzia pomocnicze
+│   ├── batchLoader.ts  # Utility do batch loadingu GeoJSON
+│   ├── useBatchLoader.ts # React hook dla batch loadingu
+│   └── index.ts        # Eksport utilities
 ├── layers/             # Fabryki warstw OpenLayers (stare - do refaktoryzacji)
 │   ├── baseLayers.ts   # Warstwy bazowe
 │   └── dataLayers.ts   # Warstwy danych
@@ -33,18 +38,19 @@ src/
 - ✅ Modularna struktura kodu
 - ✅ **Komponentowa architektura warstw** - `<Map><Layer1/><Layer2/></Map>`
 - ✅ **Warstwa wojewodztwa.geojson** - z transformacją EPSG:4258 → EPSG:3857
-- ✅ **Warstwa linie.geojson** - z transformacją EPSG:2180 → EPSG:3857
+- ✅ **Warstwa linie.geojson** - z transformacją EPSG:2180 → EPSG:3857 (WebGL dla wydajności)
 - ✅ **Panel kontroli warstw** - możliwość włączania/wyłączania każdej warstwy
 - ✅ **Transformacje układów współrzędnych** - proj4 + OpenLayers
 - ✅ **Context API** - współdzielenie instancji mapy między komponentami
 - ✅ **Obsługa stanów** - loading, error handling dla każdej warstwy
 - ✅ **Konfiguracja stylów warstw** przez props
+- ✅ **Optymalizacja wydajności** - WebGL rendering dla warstwy linii
+- ✅ **Batch loading** - ładowanie dużych zbiorów danych w partiach (reusable utility)
 
 ### Planowane
 
 - 🔄 **Maska zakrywająca obszary poza Polską** (biały poligon)
 - 🔄 **Wizualizacje danych z ol-ext** - wykresy na podstawie danych1-4
-- 🔄 **Optymalizacja wydajności** linii dla płynnego przesuwania
 
 ## Instalacja i uruchomienie
 
