@@ -47,10 +47,7 @@ src/
 - ✅ **Optymalizacja wydajności** - WebGL rendering dla warstwy linii
 - ✅ **Batch loading** - ładowanie dużych zbiorów danych w partiach (reusable utility)
 - ✅ **Maska zakrywająca obszary poza Polską** (biały poligon)
-
-### Planowane
-
-- 🔄 **Wizualizacje danych z ol-ext** - wykresy na podstawie danych1-4
+- ✅ **Wizualizacje danych z ol-ext** - wykresy na podstawie danych1-4
 
 ## Instalacja i uruchomienie
 
@@ -107,3 +104,4 @@ Każdy komponent warstwy:
 - **OpenLayers 10.6** - biblioteka mapowa
 - **Proj4** - transformacje układów współrzędnych
 - **ESLint** - linting kodu
+- **ol-ext** - rozszerzenia dla OpenLayers
