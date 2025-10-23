@@ -78,7 +78,44 @@ Aplikacja używa komponentowej architektury warstw:
       strokeWidth: 1.5,
     }}
   />
+  <ChartsLayer visible={true} chartType="pie" chartSize={60} />
+  <MaskLayer />
 </Map>
+```
+
+## Zarządzanie danymi
+
+### Obecna implementacja - DataContext
+
+Aplikacja wykorzystuje dedykowany Context API (`DataContext`) do efektywnego zarządzania danymi GeoJSON:
+
+```tsx
+// src/contexts/DataContext.tsx
+export const DataProvider: React.FC = ({ children }) => {
+  const [voivodeshipsFeatures, setVoivodeshipsFeatures] = useState<
+    Feature[] | null
+  >(null);
+  // ...
+};
+
+// Wykorzystanie w komponentach
+const VoivodeshipsLayer = () => {
+  const { voivodeshipsFeatures, loading, error } = useData();
+  // Używa współdzielonych danych zamiast duplikować zapytania HTTP
+};
+
+const ChartsLayer = () => {
+  const { voivodeshipsFeatures } = useData();
+  // Te same dane, zero dodatkowych zapytań
+};
+```
+
+**Korzyści obecnego rozwiązania:**
+
+- ✅ Eliminuje dublowanie zapytań HTTP
+- ✅ Współdzielenie danych między warstwami
+- ✅ Transformacje współrzędnych wykonywane raz
+
 ```
 
 Każdy komponent warstwy:
@@ -105,3 +142,16 @@ Każdy komponent warstwy:
 - **Proj4** - transformacje układów współrzędnych
 - **ESLint** - linting kodu
 - **ol-ext** - rozszerzenia dla OpenLayers
+
+## Przyszłe Usprawnienia Architektury Danych
+
+### Obecne rozwiązanie
+
+Obecnie aplikacja używa własnego Context API do współdzielenia danych GeoJSON między warstwami (VoivodeshipsLayer i ChartsLayer), co eliminuje dublowanie zapytań HTTP.
+
+### Przyszłe możliwości
+
+#### 1. **TanStack Query (React Query)**
+
+#### 2. **Zustand**
+```

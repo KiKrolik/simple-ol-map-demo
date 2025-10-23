@@ -1,23 +1,14 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
-import GeoJSON from "ol/format/GeoJSON";
-import { register } from "ol/proj/proj4";
-import proj4 from "proj4";
 import { useMap } from "../Map";
+import { useData } from "../../contexts/DataContext";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
 import { getCenter } from "ol/extent";
 import { Style, Icon } from "ol/style";
 
-// Register coordinate systems with proj4 (if not already registered)
-if (!proj4.defs("EPSG:4258")) {
-  proj4.defs(
-    "EPSG:4258",
-    "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs"
-  );
-  register(proj4);
-}
+// Coordinate system registration is handled in DataContext
 
 interface ChartsLayerProps {
   visible?: boolean;
@@ -128,9 +119,12 @@ const ChartsLayer: React.FC<ChartsLayerProps> = ({
   chartSize = 40,
 }) => {
   const { map } = useMap();
+  const {
+    voivodeshipsFeatures,
+    loading: dataLoading,
+    error: dataError,
+  } = useData();
   const [layer, setLayer] = useState<VectorLayer<VectorSource> | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const currentLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
 
   // Memoize chart configuration to prevent re-renders
@@ -145,7 +139,7 @@ const ChartsLayer: React.FC<ChartsLayerProps> = ({
   );
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !voivodeshipsFeatures) return;
 
     // First, clean up any existing layer
     if (currentLayerRef.current) {
@@ -154,102 +148,72 @@ const ChartsLayer: React.FC<ChartsLayerProps> = ({
       setLayer(null);
     }
 
-    const loadCharts = async () => {
-      setLoading(true);
-      setError(null);
+    // Create vector source for chart features
+    const chartSource = new VectorSource();
 
-      try {
-        // Create vector source for chart features
-        const chartSource = new VectorSource();
+    console.log(
+      `Creating charts for ${voivodeshipsFeatures.length} voivodeships (using shared data)`
+    );
 
-        // Load voivodeships data
-        const response = await fetch("/data/wojewodztwa.geojson");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    // Create chart features for each voivodeship
+    voivodeshipsFeatures.forEach((feature) => {
+      const properties = feature.getProperties() as VoivodeshipData;
+      const geometry = feature.getGeometry();
 
-        const geojsonData = await response.json();
+      if (!geometry) return;
 
-        // Parse features
-        const voivodeshipFeatures = new GeoJSON().readFeatures(geojsonData, {
-          dataProjection: "EPSG:4258", // Source projection (ETRS89)
-          featureProjection: "EPSG:3857", // Target projection (Web Mercator)
-        });
+      // Get the center point of the voivodeship for chart placement
+      const extent = geometry.getExtent();
+      const center = getCenter(extent);
 
-        console.log(
-          `Loaded ${voivodeshipFeatures.length} voivodeships for charts`
-        );
+      // Create data array for the chart
+      const chartData = [
+        properties.dane1 || 0,
+        properties.dane2 || 0,
+        properties.dane3 || 0,
+        properties.dane4 || 0,
+      ];
 
-        // Create chart features for each voivodeship
-        voivodeshipFeatures.forEach((feature) => {
-          const properties = feature.getProperties() as VoivodeshipData;
-          const geometry = feature.getGeometry();
+      // Only create chart if there's data to show
+      const totalValue = chartData.reduce((sum, value) => sum + value, 0);
+      if (totalValue === 0) return;
 
-          if (!geometry) return;
+      // Create chart feature at the center of the voivodeship
+      const chartFeature = new Feature({
+        geometry: new Point(center),
+        voivodeshipId: properties.id,
+        chartData: chartData,
+        totalValue: totalValue,
+        name: `Voivodeship ${properties.id} Chart`,
+      });
 
-          // Get the center point of the voivodeship for chart placement
-          const extent = geometry.getExtent();
-          const center = getCenter(extent);
+      // Create custom chart style using Canvas rendering
+      const chartStyle = createCustomChartStyle(chartData, chartConfig);
 
-          // Create data array for the chart
-          const chartData = [
-            properties.dane1 || 0,
-            properties.dane2 || 0,
-            properties.dane3 || 0,
-            properties.dane4 || 0,
-          ];
+      chartFeature.setStyle(chartStyle);
+      chartSource.addFeature(chartFeature);
+    });
 
-          // Only create chart if there's data to show
-          const totalValue = chartData.reduce((sum, value) => sum + value, 0);
-          if (totalValue === 0) return;
+    // Create the charts layer
+    const chartsLayer = new VectorLayer({
+      source: chartSource,
+      properties: {
+        name: "Data Charts",
+        type: "charts",
+      },
+      zIndex: 300, // Above other layers but below mask
+    });
 
-          // Create chart feature at the center of the voivodeship
-          const chartFeature = new Feature({
-            geometry: new Point(center),
-            voivodeshipId: properties.id,
-            chartData: chartData,
-            totalValue: totalValue,
-            name: `Voivodeship ${properties.id} Chart`,
-          });
+    // Add layer to map
+    map.addLayer(chartsLayer);
+    currentLayerRef.current = chartsLayer;
+    setLayer(chartsLayer);
 
-          // Create custom chart style using Canvas rendering
-          const chartStyle = createCustomChartStyle(chartData, chartConfig);
-
-          chartFeature.setStyle(chartStyle);
-          chartSource.addFeature(chartFeature);
-        });
-
-        // Create the charts layer
-        const chartsLayer = new VectorLayer({
-          source: chartSource,
-          properties: {
-            name: "Data Charts",
-            type: "charts",
-          },
-          zIndex: 300, // Above other layers but below mask
-        });
-
-        // Add layer to map
-        map.addLayer(chartsLayer);
-        currentLayerRef.current = chartsLayer;
-        setLayer(chartsLayer);
-
-        console.log(
-          `Charts layer created with ${
-            chartSource.getFeatures().length
-          } charts (${chartConfig.type} type)`
-        );
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error loading charts";
-        console.error("Error loading charts:", err);
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCharts();
+    console.log(
+      `✅ Charts layer created with ${
+        chartSource.getFeatures().length
+      } charts (${chartConfig.type} type, using shared data)`
+    );
 
     // Cleanup function
     return () => {
@@ -258,7 +222,7 @@ const ChartsLayer: React.FC<ChartsLayerProps> = ({
         currentLayerRef.current = null;
       }
     };
-  }, [map, chartConfig]);
+  }, [map, voivodeshipsFeatures, chartConfig]);
 
   // Handle visibility changes
   useEffect(() => {
@@ -269,9 +233,9 @@ const ChartsLayer: React.FC<ChartsLayerProps> = ({
 
   // Log status for debugging
   useEffect(() => {
-    if (loading) console.log("Loading charts layer...");
-    if (error) console.error("Charts layer error:", error);
-  }, [loading, error]);
+    if (dataLoading) console.log("Loading charts data...");
+    if (dataError) console.error("Charts data error:", dataError);
+  }, [dataLoading, dataError]);
 
   return null; // This component doesn't render anything visual
 };
