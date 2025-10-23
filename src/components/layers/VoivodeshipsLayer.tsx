@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
@@ -16,6 +16,12 @@ if (!proj4.defs("EPSG:4258")) {
   register(proj4);
 }
 
+const DEFAULT_STYLE = {
+  fillColor: "rgba(0, 100, 200, 0.2)",
+  strokeColor: "#0066cc",
+  strokeWidth: 2,
+};
+
 interface VoivodeshipsLayerProps {
   visible?: boolean;
   style?: {
@@ -27,12 +33,9 @@ interface VoivodeshipsLayerProps {
 
 const VoivodeshipsLayer: React.FC<VoivodeshipsLayerProps> = ({
   visible = true,
-  style = {
-    fillColor: "rgba(0, 100, 200, 0.2)",
-    strokeColor: "#0066cc",
-    strokeWidth: 2,
-  },
+  style,
 }) => {
+  const finalStyle = useMemo(() => ({ ...DEFAULT_STYLE, ...style }), [style]);
   const { map } = useMap();
   const [layer, setLayer] = useState<VectorLayer<VectorSource> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -71,11 +74,11 @@ const VoivodeshipsLayer: React.FC<VoivodeshipsLayerProps> = ({
           source: vectorSource,
           style: new Style({
             fill: new Fill({
-              color: style.fillColor!,
+              color: finalStyle.fillColor,
             }),
             stroke: new Stroke({
-              color: style.strokeColor!,
-              width: style.strokeWidth!,
+              color: finalStyle.strokeColor,
+              width: finalStyle.strokeWidth,
             }),
           }),
           properties: {
@@ -122,16 +125,16 @@ const VoivodeshipsLayer: React.FC<VoivodeshipsLayerProps> = ({
     if (layer) {
       const newStyle = new Style({
         fill: new Fill({
-          color: style.fillColor!,
+          color: finalStyle.fillColor,
         }),
         stroke: new Stroke({
-          color: style.strokeColor!,
-          width: style.strokeWidth!,
+          color: finalStyle.strokeColor,
+          width: finalStyle.strokeWidth,
         }),
       });
       layer.setStyle(newStyle);
     }
-  }, [layer, style]);
+  }, [layer, finalStyle.fillColor, finalStyle.strokeColor, finalStyle.strokeWidth]);
 
   // Log status for debugging
   useEffect(() => {

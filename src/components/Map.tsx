@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useCallback,
 } from "react";
 import Map from "ol/Map";
 import View from "ol/View";
@@ -52,22 +53,22 @@ const MapComponent: React.FC<MapProps> = ({ children, className = "map" }) => {
     Record<string, BatchLoadingState>
   >({});
 
-  const registerLayerLoading = (
-    layerName: string,
-    loadingState: BatchLoadingState
-  ) => {
-    setLayerLoadingStates((prev) => ({
-      ...prev,
-      [layerName]: loadingState,
-    }));
-  };
+  const registerLayerLoading = useCallback(
+    (layerName: string, loadingState: BatchLoadingState) => {
+      setLayerLoadingStates((prev) => ({
+        ...prev,
+        [layerName]: loadingState,
+      }));
+    },
+    []
+  );
 
-  const unregisterLayerLoading = (layerName: string) => {
+  const unregisterLayerLoading = useCallback((layerName: string) => {
     setLayerLoadingStates((prev) => {
       const { [layerName]: removed, ...rest } = prev;
       return rest;
     });
-  };
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current) return;

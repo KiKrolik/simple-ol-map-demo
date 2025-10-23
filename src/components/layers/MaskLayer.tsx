@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { Feature } from "ol";
@@ -8,6 +8,8 @@ import { fromLonLat } from "ol/proj";
 import { useMap } from "../Map";
 import { POLAND_BOUNDS } from "../../config/poland";
 
+const DEFAULT_MASK_COLOR = "rgba(255, 255, 255, 0.8)";
+
 interface MaskLayerProps {
   /**
    * Color of the mask (should be white or light color)
@@ -16,9 +18,8 @@ interface MaskLayerProps {
   maskColor?: string;
 }
 
-const MaskLayer: React.FC<MaskLayerProps> = ({
-  maskColor = "rgba(255, 255, 255, 0.8)",
-}) => {
+const MaskLayer: React.FC<MaskLayerProps> = ({ maskColor }) => {
+  const finalMaskColor = useMemo(() => maskColor || DEFAULT_MASK_COLOR, [maskColor]);
   const { map } = useMap();
   const [, setLayer] = useState<VectorLayer<VectorSource> | null>(null);
 
@@ -81,7 +82,7 @@ const MaskLayer: React.FC<MaskLayerProps> = ({
       source: vectorSource,
       style: new Style({
         fill: new Fill({
-          color: maskColor,
+          color: finalMaskColor,
         }),
       }),
       properties: {
@@ -105,7 +106,7 @@ const MaskLayer: React.FC<MaskLayerProps> = ({
         map.removeLayer(maskLayer);
       }
     };
-  }, [map, maskColor]);
+  }, [map, finalMaskColor]);
 
   return null; // This component doesn't render anything visual
 };

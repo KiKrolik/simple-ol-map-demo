@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import WebGLVectorLayer from "ol/layer/WebGLVector";
 import VectorSource from "ol/source/Vector";
 import { register } from "ol/proj/proj4";
@@ -15,6 +15,11 @@ if (!proj4.defs("EPSG:2180")) {
   register(proj4);
 }
 
+const DEFAULT_LINE_STYLE = {
+  strokeColor: "#ff6600",
+  strokeWidth: 1.5,
+};
+
 interface LinesLayerProps {
   visible?: boolean;
   style?: {
@@ -25,11 +30,9 @@ interface LinesLayerProps {
 
 const LinesLayer: React.FC<LinesLayerProps> = ({
   visible = true,
-  style = {
-    strokeColor: "#ff6600",
-    strokeWidth: 1.5,
-  },
+  style,
 }) => {
+  const finalStyle = useMemo(() => ({ ...DEFAULT_LINE_STYLE, ...style }), [style]);
   const { map, registerLayerLoading, unregisterLayerLoading } = useMap();
   const [layer, setLayer] = useState<WebGLVectorLayer | null>(null);
   const { loadingState, loadData } = useBatchLoader();
@@ -50,8 +53,8 @@ const LinesLayer: React.FC<LinesLayerProps> = ({
         const linesLayer = new WebGLVectorLayer({
           source: vectorSource,
           style: {
-            "stroke-color": style.strokeColor!,
-            "stroke-width": style.strokeWidth!,
+            "stroke-color": finalStyle.strokeColor,
+            "stroke-width": finalStyle.strokeWidth,
           },
           properties: {
             name: "Lines (WebGL)",
@@ -114,12 +117,12 @@ const LinesLayer: React.FC<LinesLayerProps> = ({
   useEffect(() => {
     if (layer) {
       const webglStyle = {
-        "stroke-color": style.strokeColor!,
-        "stroke-width": style.strokeWidth!,
+        "stroke-color": finalStyle.strokeColor,
+        "stroke-width": finalStyle.strokeWidth,
       };
       layer.setStyle(webglStyle);
     }
-  }, [layer, style]);
+  }, [layer, finalStyle.strokeColor, finalStyle.strokeWidth]);
 
   // Register loading state with map context for progress display
   useEffect(() => {
