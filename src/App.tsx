@@ -1,12 +1,16 @@
-import React from 'react'
+import MapComponent from "./components/MapComponent";
 
 function App() {
   return (
     <div className="app">
-      <h1>Mapa Polski</h1>
-      <p>Aplikacja mapowa z OpenLayers - wkrótce będzie dostępna!</p>
+      <div className="header">
+        <h1>Mapa Polski</h1>
+      </div>
+      <div className="map-container">
+        <MapComponent />
+      </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
