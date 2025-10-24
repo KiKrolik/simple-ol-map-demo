@@ -7,21 +7,14 @@ import { Feature } from "ol";
 import { Point } from "ol/geom";
 import { getCenter } from "ol/extent";
 import { Style, Icon } from "ol/style";
+import { VoivodeshipData, ChartType } from "../../types";
 
 // Coordinate system registration is handled in DataContext
 
 interface ChartsLayerProps {
   visible?: boolean;
-  chartType?: "pie" | "bar";
+  chartType?: ChartType;
   chartSize?: number;
-}
-
-interface VoivodeshipData {
-  id: number;
-  dane1: number;
-  dane2: number;
-  dane3: number;
-  dane4: number;
 }
 
 interface ChartConfig {

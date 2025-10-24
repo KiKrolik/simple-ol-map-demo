@@ -3,13 +3,13 @@ import React, {
   useContext,
   useEffect,
   useState,
-  useCallback,
   useRef,
 } from "react";
 import GeoJSON from "ol/format/GeoJSON";
 import { register } from "ol/proj/proj4";
 import proj4 from "proj4";
 import { Feature } from "ol";
+import { VoivodeshipData } from "../types";
 
 // Register coordinate systems with proj4 (if not already registered)
 if (!proj4.defs("EPSG:4258")) {
@@ -20,28 +20,16 @@ if (!proj4.defs("EPSG:4258")) {
   register(proj4);
 }
 
-interface VoivodeshipData {
-  id: number;
-  dane1: number;
-  dane2: number;
-  dane3: number;
-  dane4: number;
-}
-
 interface DataContextType {
   voivodeshipsFeatures: Feature[] | null;
-  voivodeshipsRawData: any | null;
   loading: boolean;
   error: string | null;
-  refetchData: () => void;
 }
 
 const DataContext = createContext<DataContextType>({
   voivodeshipsFeatures: null,
-  voivodeshipsRawData: null,
   loading: false,
   error: null,
-  refetchData: () => {},
 });
 
 export const useData = () => {
@@ -60,60 +48,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [voivodeshipsFeatures, setVoivodeshipsFeatures] = useState<
     Feature[] | null
   >(null);
-  const [voivodeshipsRawData, setVoivodeshipsRawData] = useState<any>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dataLoadedRef = useRef(false);
-
-  const loadVoivodeshipsData = useCallback(async () => {
-    if (dataLoadedRef.current) {
-      console.log("📌 Data already loaded, skipping fetch");
-      return;
-    }
-
-    console.log("🔄 Manual data fetch triggered...");
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Load GeoJSON data
-      const response = await fetch("/data/wojewodztwa.geojson");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const geojsonData = await response.json();
-      setVoivodeshipsRawData(geojsonData);
-
-      // Parse features and transform coordinates
-      const features = new GeoJSON().readFeatures(geojsonData, {
-        dataProjection: "EPSG:4258", // Source projection (ETRS89)
-        featureProjection: "EPSG:3857", // Target projection (Web Mercator)
-      });
-
-      setVoivodeshipsFeatures(features);
-      dataLoadedRef.current = true;
-
-      console.log(`✅ Voivodeships data loaded: ${features.length} features`);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Unknown error loading voivodeships data";
-      console.error("Error loading voivodeships data:", err);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []); // Empty dependency array
-
-  const refetchData = useCallback(() => {
-    console.log("🔄 Manually refetching data...");
-    dataLoadedRef.current = false;
-    setVoivodeshipsFeatures(null);
-    setVoivodeshipsRawData(null);
-    loadVoivodeshipsData();
-  }, [loadVoivodeshipsData]);
 
   useEffect(() => {
     console.log("🔄 DataContext useEffect triggered");
@@ -148,8 +86,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           console.log("🚫 Request aborted");
           return;
         }
-
-        setVoivodeshipsRawData(geojsonData);
 
         // Parse features and transform coordinates
         const features = new GeoJSON().readFeatures(geojsonData, {
@@ -206,10 +142,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     <DataContext.Provider
       value={{
         voivodeshipsFeatures,
-        voivodeshipsRawData,
         loading,
         error,
-        refetchData,
       }}
     >
       {children}
