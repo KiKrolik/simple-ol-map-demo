@@ -8,20 +8,21 @@ Aplikacja mapowa oparta na OpenLayers z frontendem w React TypeScript, przedstaw
 src/
 ├── components/          # Komponenty React
 │   ├── Map.tsx         # Główny komponent mapy z kontekstem
-│   ├── MapComponent.tsx # Stary komponent (do usunięcia)
 │   ├── LoadingProgress.tsx # Komponent progress bar dla ładowania
 │   └── layers/         # Komponenty warstw
 │       ├── OSMLayer.tsx           # Warstwa bazowa OSM
 │       ├── VoivodeshipsLayer.tsx  # Warstwa województw
+│       ├── ChartsLayer.tsx        # Warstwa wykresów ol-ext
+│       ├── MaskLayer.tsx          # Warstwa maski zakrywającej
 │       ├── LinesLayer.tsx         # Warstwa linii (WebGL + batch loading)
 │       └── index.ts              # Eksport warstw
+├── contexts/           # Context API dla współdzielenia danych
+│   └── DataContext.tsx # Context do zarządzania danymi GeoJSON
+├── test/               # Testy jednostkowe
 ├── utils/              # Narzędzia pomocnicze
 │   ├── batchLoader.ts  # Utility do batch loadingu GeoJSON
 │   ├── useBatchLoader.ts # React hook dla batch loadingu
 │   └── index.ts        # Eksport utilities
-├── layers/             # Fabryki warstw OpenLayers (stare - do refaktoryzacji)
-│   ├── baseLayers.ts   # Warstwy bazowe
-│   └── dataLayers.ts   # Warstwy danych
 ├── config/             # Konfiguracja aplikacji
 │   └── poland.ts       # Konfiguracja granic i ustawień Polski
 ├── types/              # Definicje typów TypeScript
@@ -29,8 +30,6 @@ src/
 ```
 
 ## Funkcjonalności
-
-### Zrealizowane
 
 - ✅ Podstawowa mapa OSM
 - ✅ Widok ograniczony do granic Polski z buforem 50km
@@ -116,16 +115,6 @@ const ChartsLayer = () => {
 - ✅ Współdzielenie danych między warstwami
 - ✅ Transformacje współrzędnych wykonywane raz
 
-```
-
-Każdy komponent warstwy:
-
-- Zarządza własnym stanem (ładowanie, błędy)
-- Dodaje/usuwa się automatycznie z mapy
-- Obsługuje zmiany widoczności przez props
-- Może być stylowany przez props
-- Używa Context API do dostępu do mapy
-
 ## Układy współrzędnych
 
 - **EPSG:4258** (ETRS89) - województwa.geojson
@@ -143,8 +132,6 @@ Każdy komponent warstwy:
 - **ESLint** - linting kodu
 - **ol-ext** - rozszerzenia dla OpenLayers
 
-## Przyszłe Usprawnienia Architektury Danych
-
 ### Obecne rozwiązanie
 
 Obecnie aplikacja używa własnego Context API do współdzielenia danych GeoJSON między warstwami (VoivodeshipsLayer i ChartsLayer), co eliminuje dublowanie zapytań HTTP.
@@ -154,4 +141,7 @@ Obecnie aplikacja używa własnego Context API do współdzielenia danych GeoJSO
 #### 1. **TanStack Query (React Query)**
 
 #### 2. **Zustand**
+
+```
+
 ```
